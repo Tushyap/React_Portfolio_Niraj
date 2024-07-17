@@ -1,0 +1,11 @@
+version = 0.1
+[default.deploy.parameters]
+stack_name = "sam-app"
+resolve_s3 = true
+s3_prefix = "sam-app"
+region = "us-east-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+disable_rollback = true
+image_repositories = []
+parameter_overrides = "VpcId=\"vpc-00d2ae15d37e878d1\" SubnetIds=\"subnet-00b8c54d2a693c9c6,subnet-034ed5a00e38595b7,subnet-09988e1ccae724cad,subnet-0fdd88ff194adff01,subnet-0a9be580f043cf838\" DBInstanceIdentifier=\"portfolio-db\" DBEndpoint=\"portfolio-db.catnz8an2wm3.us-east-1.rds.amazonaws.com\" DBPort=\"3306\" DBUser=\"admin\" DBName=\"portfolio_DB\" LambdaSecurityGroupId=\"'sg-075cbbffe5d0cb39b'\""

@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: "Deploy Lambda with API Gateway using SAM"
+
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: The VPC ID
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: The Subnet IDs
+  DBInstanceIdentifier:
+    Type: String
+    Description: The RDS DB Instance Identifier
+  DBEndpoint:
+    Type: String
+    Description: The RDS DB Endpoint
+  DBPort:
+    Type: Number
+    Description: The RDS DB Port
+  DBUser:
+    Type: String
+    Description: The RDS DB Username
+  DBPassword:
+    Type: String
+    Description: The RDS DB Password
+    NoEcho: true
+  DBName:
+    Type: String
+    Description: The RDS DB Name
+  LambdaSecurityGroupId1:
+    Type: String
+    Description: The Lambda Security Group ID
+  LambdaSecurityGroupId2:
+    Type: String
+    Description: The Lambda Security Group ID
+
+Resources:
+  ApiGatewayApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod
+      Cors: 
+        AllowMethods: "'GET'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        AllowOrigin: "'*'"
+      EndpointConfiguration: "REGIONAL"
+      
+  MyLambdaFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties: 
+      Handler: rds-lambda-access.lambda_handler
+      Runtime: python3.12
+      CodeUri: rds-data-access/
+      Timeout: 45
+      Environment:
+        Variables:
+          DB_HOST: !Ref DBEndpoint
+          DB_PORT: !Ref DBPort
+          DB_USER: !Ref DBUser
+          DB_PASSWORD: !Ref DBPassword
+          DB_NAME: !Ref DBName
+      VpcConfig:
+        SecurityGroupIds: 
+          - !Ref LambdaSecurityGroupId1
+          - !Ref LambdaSecurityGroupId2
+        SubnetIds: !Ref SubnetIds
+      Events:
+        rdsProjectLambda:
+          Type: Api
+          Properties:
+            Path: /projects
+            Method: GET
+            RestApiId:
+              Ref: ApiGatewayApi
+
+
+Outputs:
+  # LambdafunctionApi:
+  #   Description: "API Gateway endpoint url for prod stage for Hello World function"
+  #   Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/prod/projects/"
+  LambdaFunctionArn:
+    Description: "ARN of the Lambda Function"
+    Value: !GetAtt MyLambdaFunction.Arn
+  LambdaFunctionIAMRole:
+    Description: "Implicit IAM role create for the lambda function"
+    Value: !GetAtt MyLambdaFunctionRole.Arn
